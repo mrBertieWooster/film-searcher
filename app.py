@@ -132,13 +132,13 @@ def search():
         if action == 'add_selected':  # Создание плейлиста из выбранных файлов
             selected_files = request.form.getlist('files')
             playlist_content = '\n'.join([
-                f"{protocol}://localhost:{port}/files/{os_path.splitdrive(f)[0][0]}/{os_path.relpath(f, os_path.splitdrive(f)[0] + os_path.sep)}"
+                f"{protocol}://{address}:{port}/files/{os_path.splitdrive(f)[0][0]}/{os_path.relpath(f, os_path.splitdrive(f)[0] + os_path.sep)}"
                 for f in selected_files
             ])
         
         elif action == 'add_all':  # Создание плейлиста со всеми найденными файлами
             playlist_content = '\n'.join([
-                f"{protocol}://localhost:{port}/files/{os_path.splitdrive(f)[0][0]}/{os_path.relpath(f, os_path.splitdrive(f)[0] + os_path.sep)}"
+                f"{protocol}://{address}:{port}/files/{os_path.splitdrive(f)[0][0]}/{os_path.relpath(f, os_path.splitdrive(f)[0] + os_path.sep)}"
                 for f in results
             ])
         

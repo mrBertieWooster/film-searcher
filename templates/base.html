@@ -65,9 +65,29 @@
 </head>
 <body>
     <h1>File Browser</h1>
+
+    <!-- Глобальная форма поиска -->
+     <!--
+    <form action="{{ url_for('search') }}" method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="query" class="form-control" placeholder="Search files...">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        </div>
+    </form>
+    -->
+    <div class="input-group mb-3">
+        <input type="text" id="search-input" class="form-control" placeholder="Search files..." aria-label="Search" aria-describedby="button-addon2">
+        <button class="btn btn-outline-secondary" type="button" id="search-button">Search</button>
+    </div>
+    <!--
     <nav>
-        <a href="/">Домой</a> | 
+        {% if request.path != url_for('index') %}
+        <a href="{{ url_for('index') }}" class="btn btn-secondary mb-3">
+            <i class="fas fa-home"></i> Home
+        </a>
+        {% endif %}
     </nav>
+    -->
     {% block content %}
     {% endblock %}
 

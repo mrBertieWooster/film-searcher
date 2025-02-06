@@ -4,13 +4,16 @@
 {% block title %}Disks{% endblock %}
 
 {% block content %}
-<h2>Available Disks:</h2>
 
-<!-- Форма поиска с автозаполнением -->
+<!--
+
 <div class="input-group mb-3">
     <input type="text" id="search-input" class="form-control" placeholder="Search files..." aria-label="Search" aria-describedby="button-addon2">
     <button class="btn btn-outline-secondary" type="button" id="search-button">Search</button>
 </div>
+-->
+
+<h2>Available Disks:</h2>
 
 <ul>
     {% for disk in disks %}
