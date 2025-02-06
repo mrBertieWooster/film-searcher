@@ -1,14 +1,14 @@
 <!-- templates/playlist.html -->
 {% extends "base.html" %}
 
-{% block title %}Playlist{% endblock %}
+{% block title %}Плейлист{% endblock %}
 
 {% block content %}
-<h2>Your Playlist:</h2>
+<h2>Ваш плейлист:</h2>
 <ul>
     {% for file in selected_files %}
     <li>{{ file }}</li>
     {% endfor %}
 </ul>
-<a href="{{ url_for('create_playlist') }}">Download Playlist</a>
+<a href="{{ url_for('create_playlist') }}">Скачать плейлист</a>
 {% endblock %}

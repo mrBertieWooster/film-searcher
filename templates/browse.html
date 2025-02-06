@@ -1,21 +1,19 @@
 <!-- templates/browse.html -->
 {% extends "base.html" %}
 
-{% block title %}Browse {{ path }}{% endblock %}
+{% block title %}Проводник{{ path }}{% endblock %}
 
 {% block content %}
-<!-- <h2>Path: {{ path }}</h2> -->
-
 <!-- Хлебные крошки -->
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent p-0">
         {% for crumb in breadcrumbs %}
         {% if not loop.last %}
         <li class="breadcrumb-item">
-            <a href="{{ url_for('browse', file_path=crumb.path) }}">{{ crumb.name }}</a>
+            <a href="{{ url_for('browse', file_path=crumb.path) }}" class="text-decoration-none text-dark">{{ crumb.name }}</a>
         </li>
         {% else %}
-        <li class="breadcrumb-item active" aria-current="page">{{ crumb.name }}</li>
+        <li class="breadcrumb-item active text-dark" aria-current="page">{{ crumb.name }}</li>
         {% endif %}
         {% endfor %}
     </ol>
@@ -24,91 +22,88 @@
 <!-- Кнопки Home, Go Up и плейлист -->
 <div class="d-flex align-items-center mb-3">
     <!-- Кнопка Home -->
-    <a href="{{ url_for('index') }}" class="btn btn-secondary me-2"> <!-- Отступ справа: me-2 -->
-        <i class="fas fa-home"></i> Home
+    <a href="{{ url_for('index') }}" class="btn btn-secondary me-2">
+        <i class="fas fa-home"></i> Домой
     </a>
 
     <!-- Кнопка возврата к родительской папке -->
     {% if parent_dir %}
-    <a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary me-2"> <!-- Отступ справа: me-2 -->
-        Go Up
+    <a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary me-2">
+        Наверх
     </a>
     {% endif %}
 
     <!-- Кнопки для создания плейлиста (только если есть файлы) -->
     {% if files %}
-    <div class="d-flex">
+    <div class="ms-auto d-flex align-items-center"> <!-- Выравнивание справа -->
         <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#playlistModal">
-            Add to Playlist
+            Добавить в плейлист
         </button>
         <form action="{{ url_for('browse', file_path=path) }}" method="post" class="d-inline">
             <input type="hidden" name="action" value="add_all">
-            <button type="submit" class="btn btn-info me-2">Add all to Playlist</button>
+            <button type="submit" class="btn btn-info">Добавить содержимое каталога</button>
         </form>
     </div>
     {% endif %}
 </div>
 
-
 <!-- Список папок -->
-
-<h3>Folders:</h3>
-<ul class="list-unstyled">
+<h3 class="text-dark mb-3">Каталоги:</h3>
+<ul class="list-unstyled border rounded p-2 mb-3"> <!-- Добавлены граница и отступы -->
     {% if folders %}
     {% for folder in folders %}
     <li class="folder d-flex align-items-center mb-2">
-        <i class="fas fa-folder text-warning mr-2"></i> <!-- Отступ справа -->
-        <a href="{{ url_for('browse', file_path=join(path, folder)) }}" class="text-decoration-none">{{ folder }}</a>
+        <i class="fas fa-folder text-warning me-2"></i> <!-- Отступ между иконкой и текстом -->
+        <a href="{{ url_for('browse', file_path=join(path, folder)) }}" class="text-decoration-none text-dark">{{ folder }}</a>
     </li>
     {% endfor %}
     {% else %}
-    <li class="text-muted">No folders found.</li>
+    <li class="text-muted text-dark">Каталоги не найдены</li>
     {% endif %}
 </ul>
 
 <!-- Список файлов -->
-<h3>Files:</h3>
-<ul class="list-unstyled">
+<h3 class="text-dark mb-3">Файлы:</h3>
+<ul class="list-unstyled border rounded p-2 mb-3"> <!-- Добавлены граница и отступы -->
     {% if files %}
     {% for file in files %}
     <li class="file d-flex align-items-center mb-2">
-        <i class="fas fa-file-audio text-primary mr-2"></i>
-        <label>{{ file }}</label>
+        <i class="fas fa-file-audio text-primary me-2"></i> <!-- Отступ между иконкой и текстом -->
+        <label class="text-dark">{{ file }}</label>
     </li>
     {% endfor %}
+    {% else %}
+    <li class="text-muted text-dark">Файлы не найдены</li>
+    {% endif %}
 </ul>
 
-    <!-- Модальное окно для создания плейлиста -->
-    <div class="modal fade" id="playlistModal" tabindex="-1" role="dialog" aria-labelledby="playlistModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="playlistModalLabel">Create Playlist</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Select files to add to the playlist:</p>
-                    <form id="modalPlaylistForm" action="{{ url_for('browse', file_path=path) }}" method="post">
-                        <input type="hidden" name="action" value="add_selected">
-                        <ul>
-                            {% for file in files %}
-                            <li>
-                                <input type="checkbox" name="files" value="{{ file }}"> {{ file }}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="modalPlaylistForm" class="btn btn-primary">Create Playlist</button>
-                </div>
+<!-- Модальное окно для создания плейлиста -->
+<div class="modal fade" id="playlistModal" tabindex="-1" role="dialog" aria-labelledby="playlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light text-dark">
+                <h5 class="modal-title" id="playlistModalLabel">Создать плейлист</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-dark">Выберите файлы для добавления в плейлист:</p>
+                <form id="modalPlaylistForm" action="{{ url_for('browse', file_path=path) }}" method="post">
+                    <input type="hidden" name="action" value="add_selected">
+                    <ul class="list-unstyled">
+                        {% for file in files %}
+                        <li class="d-flex align-items-center mb-2">
+                            <input type="checkbox" name="files" value="{{ file }}" class="me-2"> <!-- Отступ справа -->
+                            <label class="text-dark">{{ file }}</label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" form="modalPlaylistForm" class="btn btn-primary">Создать</button>
             </div>
         </div>
     </div>
-
-    {% else %}
-    <li class="text-muted">No files found.</li>
-    {% endif %}
-</ul>
+</div>
 {% endblock %}
