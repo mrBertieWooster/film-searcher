@@ -39,10 +39,13 @@ def browse(file_path='C:\\'):
     files = [item for item in items if os_path.isfile(os_path.join(full_path, item)) and is_allowed_file(item)]
     
     # Формируем ссылку на родительскую директорию
-    if full_path == os_path.abspath(file_path):  # Проверяем, что это корень диска
+    drive, tail = os_path.splitdrive(full_path)  # Разделяем путь на диск и оставшуюся часть
+    if tail == os_path.sep:  # Если оставшаяся часть — только разделитель (например, '\'), это корень диска
         parent_dir = None
     else:
         parent_dir = os_path.dirname(full_path)
+        
+    print(f"Full path: {full_path}, Parent dir: {parent_dir}")
     
     # Генерация хлебных крошек
     breadcrumbs = []
