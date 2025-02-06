@@ -24,25 +24,29 @@
 <!-- Кнопки Home, Go Up и плейлист -->
 <div class="d-flex align-items-center mb-3">
     <!-- Кнопка Home -->
-    <a href="{{ url_for('index') }}" class="btn btn-secondary mr-3">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary me-2"> <!-- Отступ справа: me-2 -->
         <i class="fas fa-home"></i> Home
     </a>
 
     <!-- Кнопка возврата к родительской папке -->
     {% if parent_dir %}
-    <a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary mr-auto">Go Up</a>
+    <a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary me-2"> <!-- Отступ справа: me-2 -->
+        Go Up
+    </a>
     {% endif %}
 
-    <!-- Кнопки для создания плейлиста -->
+    <!-- Кнопки для создания плейлиста (только если есть файлы) -->
+    {% if files %}
     <div class="d-flex">
-        <button type="button" class="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#playlistModal">
+        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#playlistModal">
             Add to Playlist
         </button>
         <form action="{{ url_for('browse', file_path=path) }}" method="post" class="d-inline">
             <input type="hidden" name="action" value="add_all">
-            <button type="submit" class="btn btn-info">Add all to Playlist</button>
+            <button type="submit" class="btn btn-info me-2">Add all to Playlist</button>
         </form>
     </div>
+    {% endif %}
 </div>
 
 
