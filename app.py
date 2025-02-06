@@ -7,9 +7,13 @@ app = Flask(__name__)
 
 # Загрузка конфигурации
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf-8')
+
 disks = config['DEFAULT']['Disks'].split(',')
 allowed_extensions = config['DEFAULT']['AllowedExtensions'].split(',')
+protocol = config['DEFAULT']['Protocol']  
+port = int(config['DEFAULT']['Port']) 
+address = config['DEFAULT']['Address']
 
 # Функция для проверки расширения файла
 def is_allowed_file(file_name):
@@ -39,13 +43,11 @@ def browse(file_path='C:\\'):
     files = [item for item in items if os_path.isfile(os_path.join(full_path, item)) and is_allowed_file(item)]
     
     # Формируем ссылку на родительскую директорию
-    drive, tail = os_path.splitdrive(full_path)  # Разделяем путь на диск и оставшуюся часть
-    if tail == os_path.sep:  # Если оставшаяся часть — только разделитель (например, '\'), это корень диска
+    drive, tail = os_path.splitdrive(full_path)
+    if tail == os_path.sep:
         parent_dir = None
     else:
         parent_dir = os_path.dirname(full_path)
-        
-    print(f"Full path: {full_path}, Parent dir: {parent_dir}")
     
     # Генерация хлебных крошек
     breadcrumbs = []
@@ -59,10 +61,15 @@ def browse(file_path='C:\\'):
     # Обработка POST-запроса для создания плейлиста
     if request.method == 'POST':
         selected_files = request.form.getlist('files')
-        playlist_content = '\n'.join([os_path.join(full_path, f) for f in selected_files])
+        
+        # Генерация HTTP/HTTPS-ссылок для выбранных файлов
+        playlist_content = '\n'.join([
+            f"{protocol}://{address}:{port}/files/{os_path.splitdrive(os_path.join(full_path, f))[0][0]}/{os_path.relpath(os_path.join(full_path, f), os_path.splitdrive(full_path)[0] + os_path.sep)}"
+            for f in selected_files
+        ])
         
         # Сохраняем плейлист
-        with open('playlist.m3u', 'w') as f:
+        with open('playlist.m3u', 'w', encoding='utf-8') as f:
             f.write(playlist_content)
         
         # Возвращаем файл плейлиста для скачивания
@@ -103,5 +110,21 @@ def search():
     
     return render_template('search.html', results=results, query=query)
 
+@app.route('/files/<disk>/<path:file_path>')
+def serve_file(disk, file_path):
+    # Формируем полный путь к файлу
+    full_path = os_path.abspath(os_path.join(f"{disk}:", file_path))
+    
+    # Проверяем, что запрошенный файл находится в разрешённых каталогах
+    if not any(full_path.startswith(d.strip()) for d in disks):
+        return "Access denied", 403
+    
+    # Проверяем, что файл существует
+    if not os_path.isfile(full_path):
+        return "File not found", 404
+    
+    # Отправляем файл для скачивания
+    return send_from_directory(os_path.dirname(full_path), os_path.basename(full_path))
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=port)
