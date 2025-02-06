@@ -5,6 +5,13 @@
 
 {% block content %}
 <h2>Available Disks:</h2>
+
+<!-- Форма поиска -->
+<form action="{{ url_for('search') }}" method="get">
+    <input type="text" name="query" placeholder="Search files..." required>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
 <ul>
     {% for disk in disks %}
     <li class="folder">

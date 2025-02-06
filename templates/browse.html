@@ -6,9 +6,24 @@
 {% block content %}
 <h2>Path: {{ path }}</h2>
 
+<!-- Хлебные крошки -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        {% for crumb in breadcrumbs %}
+        {% if not loop.last %}
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('browse', file_path=crumb.path) }}">{{ crumb.name }}</a>
+        </li>
+        {% else %}
+        <li class="breadcrumb-item active" aria-current="page">{{ crumb.name }}</li>
+        {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+
 <!-- Кнопка возврата к родительской папке -->
 {% if parent_dir %}
-<a href="{{ url_for('browse', file_path=parent_dir) }}">Go Up</a><br><br>
+<a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary">Go Up</a><br><br>
 {% endif %}
 
 <!-- Список папок -->
@@ -31,18 +46,14 @@
     <ul>
         {% if files %}
         {% for file in files %}
-        <!-- Проверяем расширение файла -->
-        {% set file_lower = file|lower %}
-        {% if file_lower.endswith(('.mp3', '.wav', '.flac')) %}
         <li class="file">
             <input type="checkbox" name="files" value="{{ file }}"> {{ file }}
         </li>
-        {% endif %}
         {% endfor %}
         {% else %}
         <li>No files found.</li>
         {% endif %}
     </ul>
-    <button type="submit">Create Playlist</button>
+    <button type="submit" class="btn btn-success">Create Playlist</button>
 </form>
 {% endblock %}

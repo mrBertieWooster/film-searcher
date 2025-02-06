@@ -39,7 +39,31 @@ def browse(file_path='C:\\'):
     files = [item for item in items if os_path.isfile(os_path.join(full_path, item)) and is_allowed_file(item)]
     
     # Формируем ссылку на родительскую директорию
-    parent_dir = os_path.dirname(full_path) if full_path != file_path else None
+    if full_path == os_path.abspath(file_path):  # Проверяем, что это корень диска
+        parent_dir = None
+    else:
+        parent_dir = os_path.dirname(full_path)
+    
+    # Генерация хлебных крошек
+    breadcrumbs = []
+    path_parts = full_path.split(os_path.sep)
+    cumulative_path = ""
+    for part in path_parts:
+        if part:
+            cumulative_path = os_path.join(cumulative_path, part)
+            breadcrumbs.append({'name': part, 'path': cumulative_path})
+    
+    # Обработка POST-запроса для создания плейлиста
+    if request.method == 'POST':
+        selected_files = request.form.getlist('files')
+        playlist_content = '\n'.join([os_path.join(full_path, f) for f in selected_files])
+        
+        # Сохраняем плейлист
+        with open('playlist.m3u', 'w') as f:
+            f.write(playlist_content)
+        
+        # Возвращаем файл плейлиста для скачивания
+        return send_from_directory('.', 'playlist.m3u', as_attachment=True)
     
     # Передаём os_path.join в шаблон
     return render_template('browse.html', 
@@ -47,7 +71,8 @@ def browse(file_path='C:\\'):
                            folders=folders, 
                            files=files, 
                            parent_dir=parent_dir,
-                           join=os_path.join)
+                           join=os_path.join,
+                           breadcrumbs=breadcrumbs)
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
@@ -62,14 +87,18 @@ def create_playlist():
 
 @app.route('/search', methods=['GET'])
 def search():
-    query = request.args.get('query', '')
+    query = request.args.get('query', '').strip()
+    if not query:
+        return render_template('search.html', results=[], query=query)
+    
     results = []
     for disk in disks:
-        for root, dirs, files in os.walk(disk):  # Используем os.walk
+        for root, dirs, files in os.walk(disk.strip()):
             for file in files:
-                if query.lower() in file.lower():
+                if query.lower() in file.lower() and is_allowed_file(file):
                     results.append(os_path.join(root, file))
-    return render_template('search.html', results=results)
+    
+    return render_template('search.html', results=results, query=query)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
