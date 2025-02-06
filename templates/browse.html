@@ -1,0 +1,48 @@
+<!-- templates/browse.html -->
+{% extends "base.html" %}
+
+{% block title %}Browse {{ path }}{% endblock %}
+
+{% block content %}
+<h2>Path: {{ path }}</h2>
+
+<!-- Кнопка возврата к родительской папке -->
+{% if parent_dir %}
+<a href="{{ url_for('browse', file_path=parent_dir) }}">Go Up</a><br><br>
+{% endif %}
+
+<!-- Список папок -->
+<h3>Folders:</h3>
+<ul>
+    {% if folders %}
+    {% for folder in folders %}
+    <li class="folder">
+        <a href="{{ url_for('browse', file_path=join(path, folder)) }}">{{ folder }}</a>
+    </li>
+    {% endfor %}
+    {% else %}
+    <li>No folders found.</li>
+    {% endif %}
+</ul>
+
+<!-- Список файлов -->
+<h3>Files:</h3>
+<form action="{{ url_for('browse', file_path=path) }}" method="post">
+    <ul>
+        {% if files %}
+        {% for file in files %}
+        <!-- Проверяем расширение файла -->
+        {% set file_lower = file|lower %}
+        {% if file_lower.endswith(('.mp3', '.wav', '.flac')) %}
+        <li class="file">
+            <input type="checkbox" name="files" value="{{ file }}"> {{ file }}
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <li>No files found.</li>
+        {% endif %}
+    </ul>
+    <button type="submit">Create Playlist</button>
+</form>
+{% endblock %}

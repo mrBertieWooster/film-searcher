@@ -1,7 +1,6 @@
-# app.py
-
 from flask import Flask, render_template, request, send_from_directory
-import os
+import os  # Импортируем основной модуль os
+from os import path as os_path  # Импортируем os.path как os_path
 import configparser
 
 app = Flask(__name__)
@@ -10,24 +9,45 @@ app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read('config.ini')
 disks = config['DEFAULT']['Disks'].split(',')
+allowed_extensions = config['DEFAULT']['AllowedExtensions'].split(',')
+
+# Функция для проверки расширения файла
+def is_allowed_file(file_name):
+    return any(file_name.lower().endswith(ext) for ext in allowed_extensions)
 
 @app.route('/')
 def index():
-    directories = []
-    for disk in disks:
-        if os.path.exists(disk):
-            directories.append({'disk': disk, 'folders': os.listdir(disk)})
-    return render_template('index.html', directories=directories)
+    return render_template('index.html', disks=disks)
 
-@app.route('/browse/<path:file_path>')
-def browse(file_path):
-    full_path = os.path.join(file_path)
-    if os.path.isdir(full_path):
-        files = os.listdir(full_path)
-        return render_template('browse.html', files=files, path=file_path)
-    else:
-        # Если это файл, можно предложить скачать
-        return send_from_directory(os.path.dirname(full_path), os.path.basename(full_path))
+@app.route('/browse/<path:file_path>', methods=['GET', 'POST'])
+def browse(file_path='C:\\'):
+    full_path = os_path.abspath(file_path)
+    
+    # Проверяем, что запрошенный путь находится на разрешённых дисках
+    if not any(full_path.startswith(disk.strip()) for disk in disks):
+        return "Access denied", 403
+    
+    try:
+        items = os.listdir(full_path)
+    except PermissionError:
+        return "Permission denied", 403
+    except FileNotFoundError:
+        return "Directory not found", 404
+    
+    # Разделяем файлы и папки
+    folders = [item for item in items if os_path.isdir(os_path.join(full_path, item))]
+    files = [item for item in items if os_path.isfile(os_path.join(full_path, item)) and is_allowed_file(item)]
+    
+    # Формируем ссылку на родительскую директорию
+    parent_dir = os_path.dirname(full_path) if full_path != file_path else None
+    
+    # Передаём os_path.join в шаблон
+    return render_template('browse.html', 
+                           path=full_path, 
+                           folders=folders, 
+                           files=files, 
+                           parent_dir=parent_dir,
+                           join=os_path.join)
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
@@ -45,10 +65,10 @@ def search():
     query = request.args.get('query', '')
     results = []
     for disk in disks:
-        for root, dirs, files in os.walk(disk):
+        for root, dirs, files in os.walk(disk):  # Используем os.walk
             for file in files:
                 if query.lower() in file.lower():
-                    results.append(os.path.join(root, file))
+                    results.append(os_path.join(root, file))
     return render_template('search.html', results=results)
 
 if __name__ == '__main__':

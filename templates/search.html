@@ -1,0 +1,20 @@
+<!-- templates/search.html -->
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<h2>Search Results for "{{ query }}":</h2>
+<form action="{{ url_for('search') }}" method="get">
+    <input type="text" name="query" placeholder="Enter search term" value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+
+<ul>
+    {% for result in results %}
+    <li><a href="{{ url_for('browse', file_path=result) }}">{{ result }}</a></li>
+    {% empty %}
+    <li>No results found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,15 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Disks{% endblock %}
+
+{% block content %}
+<h2>Available Disks:</h2>
+<ul>
+    {% for disk in disks %}
+    <li class="folder">
+        <a href="{{ url_for('browse', file_path=disk.strip() + '\\') }}">{{ disk.strip() }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
