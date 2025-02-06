@@ -60,15 +60,22 @@ def browse(file_path='C:\\'):
     
     # Обработка POST-запроса для создания плейлиста
     if request.method == 'POST':
-        selected_files = request.form.getlist('files')
+        action = request.form.get('action')  # Определяем действие
         
-        # Генерация HTTP/HTTPS-ссылок для выбранных файлов
-        playlist_content = '\n'.join([
-            f"{protocol}://{address}:{port}/files/{os_path.splitdrive(os_path.join(full_path, f))[0][0]}/{os_path.relpath(os_path.join(full_path, f), os_path.splitdrive(full_path)[0] + os_path.sep)}"
-            for f in selected_files
-        ])
+        if action == 'add_selected':  # Добавление выбранных файлов
+            selected_files = request.form.getlist('files')
+            playlist_content = '\n'.join([
+                f"{protocol}://{address}:{port}/files/{os_path.splitdrive(os_path.join(full_path, f))[0][0]}/{os_path.relpath(os_path.join(full_path, f), os_path.splitdrive(full_path)[0] + os_path.sep)}"
+                for f in selected_files
+            ])
         
-        # Сохраняем плейлист
+        elif action == 'add_all':  # Добавление всех файлов в текущем каталоге
+            playlist_content = '\n'.join([
+                f"{protocol}://{address}:{port}/files/{os_path.splitdrive(os_path.join(full_path, f))[0][0]}/{os_path.relpath(os_path.join(full_path, f), os_path.splitdrive(full_path)[0] + os_path.sep)}"
+                for f in files
+            ])
+        
+        # Сохраняем плейлист с кодировкой UTF-8
         with open('playlist.m3u', 'w', encoding='utf-8') as f:
             f.write(playlist_content)
         
@@ -95,9 +102,19 @@ def create_playlist():
     
     return send_from_directory('.', 'playlist.m3u', as_attachment=True)
 
-@app.route('/search', methods=['GET'])
+@app.route('/search', methods=['GET', 'POST'])
 def search():
     query = request.args.get('query', '').strip()
+    
+    if request.is_json:  # Если запрос пришёл через AJAX
+        results = []
+        for disk in disks:
+            for root, dirs, files in os.walk(disk.strip()):
+                for file in files:
+                    if query.lower() in file.lower() and is_allowed_file(file):
+                        results.append(os_path.join(root, file))
+        return {'results': results}  # Возвращаем JSON-ответ
+    
     if not query:
         return render_template('search.html', results=[], query=query)
     
@@ -107,6 +124,30 @@ def search():
             for file in files:
                 if query.lower() in file.lower() and is_allowed_file(file):
                     results.append(os_path.join(root, file))
+    
+    # Обработка POST-запроса для создания плейлиста
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add_selected':  # Создание плейлиста из выбранных файлов
+            selected_files = request.form.getlist('files')
+            playlist_content = '\n'.join([
+                f"{protocol}://localhost:{port}/files/{os_path.splitdrive(f)[0][0]}/{os_path.relpath(f, os_path.splitdrive(f)[0] + os_path.sep)}"
+                for f in selected_files
+            ])
+        
+        elif action == 'add_all':  # Создание плейлиста со всеми найденными файлами
+            playlist_content = '\n'.join([
+                f"{protocol}://localhost:{port}/files/{os_path.splitdrive(f)[0][0]}/{os_path.relpath(f, os_path.splitdrive(f)[0] + os_path.sep)}"
+                for f in results
+            ])
+        
+        # Сохраняем плейлист с кодировкой UTF-8
+        with open('playlist.m3u', 'w', encoding='utf-8') as f:
+            f.write(playlist_content)
+        
+        # Возвращаем файл плейлиста для скачивания
+        return send_from_directory('.', 'playlist.m3u', as_attachment=True)
     
     return render_template('search.html', results=results, query=query)
 

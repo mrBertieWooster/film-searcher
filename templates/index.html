@@ -6,11 +6,11 @@
 {% block content %}
 <h2>Available Disks:</h2>
 
-<!-- Форма поиска -->
-<form action="{{ url_for('search') }}" method="get">
-    <input type="text" name="query" placeholder="Search files..." required>
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
+<!-- Форма поиска с автозаполнением -->
+<div class="input-group mb-3">
+    <input type="text" id="search-input" class="form-control" placeholder="Search files..." aria-label="Search" aria-describedby="button-addon2">
+    <button class="btn btn-outline-secondary" type="button" id="search-button">Search</button>
+</div>
 
 <ul>
     {% for disk in disks %}
@@ -19,4 +19,56 @@
     </li>
     {% endfor %}
 </ul>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+
+    // Автозаполнение поиска
+    searchInput.addEventListener('input', function () {
+        fetch(`/search?query=${this.value}`)
+            .then(response => response.json())
+            .then(data => {
+                const dropdown = document.getElementById('search-results');
+                dropdown.innerHTML = ''; // Очищаем предыдущие результаты
+
+                data.results.forEach(result => {
+                    const li = document.createElement('li');
+                    li.textContent = result;
+                    li.classList.add('dropdown-item');
+                    li.style.cursor = 'pointer';
+                    li.addEventListener('click', function () {
+                        searchInput.value = result; // Устанавливаем значение в поле поиска
+                        dropdown.innerHTML = ''; // Очищаем список
+                    });
+                    dropdown.appendChild(li);
+                });
+
+                if (data.results.length > 0) {
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            });
+    });
+
+    // Скрытие списка при клике вне поля
+    document.addEventListener('click', function (event) {
+        if (!searchInput.contains(event.target)) {
+            document.getElementById('search-results').style.display = 'none';
+        }
+    });
+
+    // Кнопка поиска
+    searchButton.addEventListener('click', function () {
+        if (searchInput.value.trim() !== '') {
+            window.location.href = `/search?query=${encodeURIComponent(searchInput.value)}`;
+        }
+    });
+});
+</script>
+
+<!-- Список результатов автозаполнения -->
+<div id="search-results" class="dropdown-menu" style="display: none; position: absolute; width: 100%; max-height: 200px; overflow-y: auto;"></div>
 {% endblock %}

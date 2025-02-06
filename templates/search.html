@@ -6,13 +6,30 @@
 {% block content %}
 <h2>Search Results for "{{ query }}":</h2>
 
-<ul>
-    {% if results %}
-    {% for result in results %}
-    <li><a href="{{ url_for('browse', file_path=result) }}">{{ result }}</a></li>
-    {% endfor %}
-    {% else %}
-    <li>No results found.</li>
-    {% endif %}
-</ul>
+{% if results %}
+<form action="{{ url_for('search') }}" method="post">
+    <input type="hidden" name="action" value="add_selected">
+    <ul>
+        {% for result in results %}
+        <li>
+            <input type="checkbox" name="files" value="{{ result }}"> {{ result }}
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="btn-group">
+        <button type="submit" class="btn btn-success">Add to Playlist</button>
+    </div>
+</form>
+
+<!-- Кнопка Add all to Playlist -->
+<form action="{{ url_for('search') }}" method="post" style="margin-top: 10px;">
+    <input type="hidden" name="action" value="add_all">
+    <button type="submit" class="btn btn-info">Add all to Playlist</button>
+</form>
+{% else %}
+<p>No results found.</p>
+{% endif %}
+
+<!-- Ссылка на главную страницу -->
+<a href="{{ url_for('index') }}" class="btn btn-primary" style="margin-top: 10px;">Back to Disks</a>
 {% endblock %}

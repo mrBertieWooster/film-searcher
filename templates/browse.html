@@ -23,39 +23,86 @@
 
 <!-- Кнопка возврата к родительской папке -->
 {% if parent_dir %}
-<div style="margin-bottom: 10px;">
-    <a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary">Go Up</a>
-</div>
+<a href="{{ url_for('browse', file_path=parent_dir) }}" class="btn btn-primary mb-3">Go Up</a><br>
 {% endif %}
 
 <!-- Список папок -->
 <h3>Folders:</h3>
-<ul>
+<ul class="list-unstyled">
     {% if folders %}
     {% for folder in folders %}
-    <li class="folder">
-        <a href="{{ url_for('browse', file_path=join(path, folder)) }}">{{ folder }}</a>
+    <li class="folder d-flex align-items-center mb-2">
+        <i class="fas fa-folder text-warning mr-2"></i>
+        <a href="{{ url_for('browse', file_path=join(path, folder)) }}" class="text-decoration-none">{{ folder }}</a>
     </li>
     {% endfor %}
     {% else %}
-    <li>No folders found.</li>
+    <li class="text-muted">No folders found.</li>
     {% endif %}
 </ul>
 
 <!-- Список файлов -->
 <h3>Files:</h3>
-<form action="{{ url_for('browse', file_path=path) }}" method="post">
-    <ul>
-        {% if files %}
-        {% for file in files %}
-        <li class="file">
-            <input type="checkbox" name="files" value="{{ file }}"> {{ file }}
-        </li>
-        {% endfor %}
-        {% else %}
-        <li>No files found.</li>
-        {% endif %}
-    </ul>
-    <button type="submit" class="btn btn-success">Create Playlist</button>
-</form>
+<ul class="list-unstyled">
+    {% if files %}
+    <!-- Форма для Add to Playlist -->
+    <form id="playlistForm" action="{{ url_for('browse', file_path=path) }}" method="post">
+        <input type="hidden" name="action" value="add_selected">
+        <ul>
+            {% for file in files %}
+            <li class="file d-flex align-items-center mb-2">
+                <i class="fas fa-file-audio text-primary mr-2"></i>
+                <input type="checkbox" name="files" value="{{ file }}" class="mr-2">
+                <label>{{ file }}</label>
+            </li>
+            {% endfor %}
+        </ul>
+    </form>
+
+    <!-- Модальное окно для создания плейлиста -->
+    <div class="modal fade" id="playlistModal" tabindex="-1" role="dialog" aria-labelledby="playlistModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="playlistModalLabel">Create Playlist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Select files to add to the playlist:</p>
+                    <form id="modalPlaylistForm" action="{{ url_for('browse', file_path=path) }}" method="post">
+                        <input type="hidden" name="action" value="add_selected">
+                        <ul>
+                            {% for file in files %}
+                            <li>
+                                <input type="checkbox" name="files" value="{{ file }}"> {{ file }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="modalPlaylistForm" class="btn btn-primary">Create Playlist</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки для создания плейлиста -->
+    <div class="btn-group mt-3">
+        <!-- Кнопка для вызова модального окна -->
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#playlistModal">
+            Add to Playlist
+        </button>
+
+        <!-- Кнопка Add all to Playlist -->
+        <form action="{{ url_for('browse', file_path=path) }}" method="post" class="d-inline">
+            <input type="hidden" name="action" value="add_all">
+            <button type="submit" class="btn btn-info ml-2">Add all to Playlist</button>
+        </form>
+    </div>
+    {% else %}
+    <li class="text-muted">No files found.</li>
+    {% endif %}
+</ul>
 {% endblock %}
